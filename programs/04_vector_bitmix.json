@@ -1,0 +1,27 @@
+{
+  "name": "vector_bitmix",
+  "buffers": {"data": 16, "mask": 16, "out": 16},
+  "operations": [
+    {"id": 0, "op": "const", "dest": "shift", "value": 5},
+    {"id": 1, "op": "splat", "dest": "vshift", "args": ["shift"]},
+    {"id": 2, "op": "vload", "dest": "data0", "buffer": "data", "offset": 0},
+    {"id": 3, "op": "vload", "dest": "mask0", "buffer": "mask", "offset": 0},
+    {"id": 4, "op": "vload", "dest": "data1", "buffer": "data", "offset": 8},
+    {"id": 5, "op": "vload", "dest": "mask1", "buffer": "mask", "offset": 8},
+    {"id": 6, "op": "vxor", "dest": "mixed0", "args": ["data0", "mask0"]},
+    {"id": 7, "op": "vxor", "dest": "mixed1", "args": ["data1", "mask1"]},
+    {"id": 8, "op": "vshl", "dest": "shifted0", "args": ["mixed0", "vshift"]},
+    {"id": 9, "op": "vshl", "dest": "shifted1", "args": ["mixed1", "vshift"]},
+    {"id": 10, "op": "vadd", "dest": "result0", "args": ["shifted0", "data0"]},
+    {"id": 11, "op": "vadd", "dest": "result1", "args": ["shifted1", "data1"]},
+    {"id": 12, "op": "vstore", "args": ["result0"], "buffer": "out", "offset": 0},
+    {"id": 13, "op": "vstore", "args": ["result1"], "buffer": "out", "offset": 8}
+  ],
+  "cases": [
+    {
+      "data": [3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181],
+      "mask": [4294967295, 0, 17, 31, 63, 127, 255, 511, 1023, 2047, 4095, 8191, 16383, 32767, 65535, 131071],
+      "out": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

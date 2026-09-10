@@ -1,0 +1,21 @@
+{
+  "name": "scalar_dual_chain",
+  "buffers": {"a": 1, "b": 1, "c": 1, "d": 1, "out": 2},
+  "operations": [
+    {"id": 0, "op": "load", "dest": "a0", "buffer": "a", "offset": 0},
+    {"id": 1, "op": "load", "dest": "b0", "buffer": "b", "offset": 0},
+    {"id": 2, "op": "load", "dest": "c0", "buffer": "c", "offset": 0},
+    {"id": 3, "op": "load", "dest": "d0", "buffer": "d", "offset": 0},
+    {"id": 4, "op": "mul", "dest": "left_product", "args": ["a0", "b0"]},
+    {"id": 5, "op": "mul", "dest": "right_product", "args": ["c0", "d0"]},
+    {"id": 6, "op": "add", "dest": "cross", "args": ["a0", "c0"]},
+    {"id": 7, "op": "add", "dest": "left", "args": ["left_product", "cross"]},
+    {"id": 8, "op": "xor", "dest": "right", "args": ["right_product", "cross"]},
+    {"id": 9, "op": "store", "args": ["left"], "buffer": "out", "offset": 0},
+    {"id": 10, "op": "store", "args": ["right"], "buffer": "out", "offset": 1}
+  ],
+  "cases": [
+    {"a": [13], "b": [5], "c": [21], "d": [9], "out": [0, 0]},
+    {"a": [1], "b": [2], "c": [3], "d": [4], "out": [99, 99]}
+  ]
+}

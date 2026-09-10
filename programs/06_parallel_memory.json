@@ -1,0 +1,36 @@
+{
+  "name": "parallel_memory",
+  "buffers": {"a": 16, "b": 16, "c": 16, "d": 16, "out0": 16, "out1": 16},
+  "operations": [
+    {"id": 0, "op": "vload", "dest": "a0", "buffer": "a", "offset": 0},
+    {"id": 1, "op": "vload", "dest": "b0", "buffer": "b", "offset": 0},
+    {"id": 2, "op": "vload", "dest": "c0", "buffer": "c", "offset": 0},
+    {"id": 3, "op": "vload", "dest": "d0", "buffer": "d", "offset": 0},
+    {"id": 4, "op": "vload", "dest": "a1", "buffer": "a", "offset": 8},
+    {"id": 5, "op": "vload", "dest": "b1", "buffer": "b", "offset": 8},
+    {"id": 6, "op": "vload", "dest": "c1", "buffer": "c", "offset": 8},
+    {"id": 7, "op": "vload", "dest": "d1", "buffer": "d", "offset": 8},
+    {"id": 8, "op": "vadd", "dest": "sum0", "args": ["a0", "b0"]},
+    {"id": 9, "op": "vadd", "dest": "sum1", "args": ["a1", "b1"]},
+    {"id": 10, "op": "vsub", "dest": "diff0", "args": ["c0", "d0"]},
+    {"id": 11, "op": "vsub", "dest": "diff1", "args": ["c1", "d1"]},
+    {"id": 12, "op": "vmul", "dest": "product0", "args": ["sum0", "diff0"]},
+    {"id": 13, "op": "vmul", "dest": "product1", "args": ["sum1", "diff1"]},
+    {"id": 14, "op": "vxor", "dest": "mixed0", "args": ["product0", "a0"]},
+    {"id": 15, "op": "vxor", "dest": "mixed1", "args": ["product1", "a1"]},
+    {"id": 16, "op": "vstore", "args": ["product0"], "buffer": "out0", "offset": 0},
+    {"id": 17, "op": "vstore", "args": ["product1"], "buffer": "out0", "offset": 8},
+    {"id": 18, "op": "vstore", "args": ["mixed0"], "buffer": "out1", "offset": 0},
+    {"id": 19, "op": "vstore", "args": ["mixed1"], "buffer": "out1", "offset": 8}
+  ],
+  "cases": [
+    {
+      "a": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+      "b": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32],
+      "c": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115],
+      "d": [3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33],
+      "out0": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "out1": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

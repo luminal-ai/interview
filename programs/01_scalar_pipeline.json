@@ -1,0 +1,26 @@
+{
+  "name": "scalar_pipeline",
+  "buffers": {"a": 1, "b": 1, "c": 1, "out": 1},
+  "operations": [
+    {"id": 0, "op": "load", "dest": "a0", "buffer": "a", "offset": 0},
+    {"id": 1, "op": "load", "dest": "b0", "buffer": "b", "offset": 0},
+    {"id": 2, "op": "load", "dest": "c0", "buffer": "c", "offset": 0},
+    {"id": 3, "op": "mul", "dest": "product", "args": ["a0", "b0"]},
+    {"id": 4, "op": "add", "dest": "sum", "args": ["product", "c0"]},
+    {"id": 5, "op": "const", "dest": "key", "value": 2654435769},
+    {"id": 6, "op": "xor", "dest": "mixed", "args": ["sum", "key"]},
+    {"id": 7, "op": "const", "dest": "shift", "value": 5},
+    {"id": 8, "op": "shl", "dest": "left", "args": ["mixed", "shift"]},
+    {"id": 9, "op": "shr", "dest": "right", "args": ["mixed", "shift"]},
+    {"id": 10, "op": "or", "dest": "joined", "args": ["left", "right"]},
+    {"id": 11, "op": "and", "dest": "clipped", "args": ["joined", "key"]},
+    {"id": 12, "op": "sub", "dest": "adjusted", "args": ["clipped", "c0"]},
+    {"id": 13, "op": "eq", "dest": "is_equal", "args": ["adjusted", "a0"]},
+    {"id": 14, "op": "select", "dest": "result", "args": ["is_equal", "b0", "adjusted"]},
+    {"id": 15, "op": "store", "args": ["result"], "buffer": "out", "offset": 0}
+  ],
+  "cases": [
+    {"a": [3], "b": [11], "c": [7], "out": [0]},
+    {"a": [4294967295], "b": [17], "c": [99], "out": [123]}
+  ]
+}

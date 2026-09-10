@@ -1,0 +1,30 @@
+{
+  "name": "scalar_selects",
+  "buffers": {"scores": 4, "thresholds": 4, "out": 4},
+  "operations": [
+    {"id": 0, "op": "load", "dest": "s0", "buffer": "scores", "offset": 0},
+    {"id": 1, "op": "load", "dest": "t0", "buffer": "thresholds", "offset": 0},
+    {"id": 2, "op": "load", "dest": "s1", "buffer": "scores", "offset": 1},
+    {"id": 3, "op": "load", "dest": "t1", "buffer": "thresholds", "offset": 1},
+    {"id": 4, "op": "load", "dest": "s2", "buffer": "scores", "offset": 2},
+    {"id": 5, "op": "load", "dest": "t2", "buffer": "thresholds", "offset": 2},
+    {"id": 6, "op": "load", "dest": "s3", "buffer": "scores", "offset": 3},
+    {"id": 7, "op": "load", "dest": "t3", "buffer": "thresholds", "offset": 3},
+    {"id": 8, "op": "lt", "dest": "c0", "args": ["s0", "t0"]},
+    {"id": 9, "op": "lt", "dest": "c1", "args": ["s1", "t1"]},
+    {"id": 10, "op": "lt", "dest": "c2", "args": ["s2", "t2"]},
+    {"id": 11, "op": "lt", "dest": "c3", "args": ["s3", "t3"]},
+    {"id": 12, "op": "select", "dest": "m0", "args": ["c0", "t0", "s0"]},
+    {"id": 13, "op": "select", "dest": "m1", "args": ["c1", "t1", "s1"]},
+    {"id": 14, "op": "select", "dest": "m2", "args": ["c2", "t2", "s2"]},
+    {"id": 15, "op": "select", "dest": "m3", "args": ["c3", "t3", "s3"]},
+    {"id": 16, "op": "store", "args": ["m0"], "buffer": "out", "offset": 0},
+    {"id": 17, "op": "store", "args": ["m1"], "buffer": "out", "offset": 1},
+    {"id": 18, "op": "store", "args": ["m2"], "buffer": "out", "offset": 2},
+    {"id": 19, "op": "store", "args": ["m3"], "buffer": "out", "offset": 3}
+  ],
+  "cases": [
+    {"scores": [3, 40, 5, 99], "thresholds": [10, 20, 5, 100], "out": [0, 0, 0, 0]},
+    {"scores": [4294967295, 0, 17, 18], "thresholds": [1, 1, 16, 19], "out": [7, 7, 7, 7]}
+  ]
+}

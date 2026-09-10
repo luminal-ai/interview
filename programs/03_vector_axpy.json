@@ -1,0 +1,25 @@
+{
+  "name": "vector_axpy",
+  "buffers": {"x": 16, "y": 16, "out": 16},
+  "operations": [
+    {"id": 0, "op": "const", "dest": "alpha", "value": 3},
+    {"id": 1, "op": "splat", "dest": "valpha", "args": ["alpha"]},
+    {"id": 2, "op": "vload", "dest": "x0", "buffer": "x", "offset": 0},
+    {"id": 3, "op": "vload", "dest": "y0", "buffer": "y", "offset": 0},
+    {"id": 4, "op": "vload", "dest": "x1", "buffer": "x", "offset": 8},
+    {"id": 5, "op": "vload", "dest": "y1", "buffer": "y", "offset": 8},
+    {"id": 6, "op": "vmul", "dest": "scaled0", "args": ["x0", "valpha"]},
+    {"id": 7, "op": "vmul", "dest": "scaled1", "args": ["x1", "valpha"]},
+    {"id": 8, "op": "vadd", "dest": "result0", "args": ["scaled0", "y0"]},
+    {"id": 9, "op": "vadd", "dest": "result1", "args": ["scaled1", "y1"]},
+    {"id": 10, "op": "vstore", "args": ["result0"], "buffer": "out", "offset": 0},
+    {"id": 11, "op": "vstore", "args": ["result1"], "buffer": "out", "offset": 8}
+  ],
+  "cases": [
+    {
+      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+      "y": [16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+      "out": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-
+.DS_Store
+*.schedule.json
+trace.json

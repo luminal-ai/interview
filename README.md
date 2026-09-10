@@ -1,237 +1,185 @@
-# VLIW Packing Interview Question
+# VLIW Backend Compiler Take-Home
 
-## Goal
+Build a general backend compiler for a small, deterministic VLIW machine. The
+input is a typed, straight-line SSA program. Your compiler must assign every
+virtual value to the machine's scratchpad and schedule every operation into
+VLIW bundles. Correctness is required; shorter schedules and smaller scratch footprints score better.
 
-Given a straight-line program, pack its operations into as few VLIW instructions as possible.
+The starter compiler is deliberately simple and serial. It is correct for all
+supported programs, so you can improve it incrementally and measure every
+change.
 
-The machine is simulated. There are no branches, no speculation, no cache misses, and no register allocation. The challenge is instruction scheduling under dependency and resource constraints.
+## Candidate task
 
-## Machine Model
+Implement scheduling and scratch allocation in `compile_program()` in `compiler.py`.
+You may add helpers and standard-library imports to that file. Do not modify `machine.py`, the
+public programs, or the tests when preparing a submission.
 
-Each VLIW instruction has 5 slots:
+Your compiler receives a parsed program dictionary and returns:
 
-```text
-| load | store | int0 | int1 | fp |
+```python
+{
+    "scratch": {"virtual_value": 0, "another_value": 8},
+    "bundles": [
+        {"load": [0, 1]},
+        {},
+        {"vector": [2], "store": [3]},
+    ],
+}
 ```
 
-At most one operation may be placed in each slot per cycle.
+The `scratch` mapping assigns each SSA result to a word address in scratch.
+The lists in each bundle contain operation IDs from the input program. Missing
+engines and empty bundles are allowed. Every operation must appear exactly
+once.
 
-Supported operations:
-
-| Op type | Slot | Latency | Form |
-| --- | --- | ---: | --- |
-| `load` | load | 3 | `x = load addr` |
-| `store` | store | 1 | `store addr, x` |
-| `iadd` | int | 1 | `x = iadd r1, r2` |
-| `isub` | int | 1 | `x = isub r1, r2` |
-| `imul` | int | 2 | `x = imul r1, r2` |
-| `fadd` | fp | 3 | `x = fadd r1, r2` |
-| `fmul` | fp | 4 | `x = fmul r1, r2` |
-
-Latency means: if an operation is issued in cycle `c`, its result may be consumed by an operation issued in cycle `c + latency`.
-
-Examples:
-
-- An `iadd` issued in cycle 0 can feed another op in cycle 1.
-- A `load` issued in cycle 0 can feed another op in cycle 3.
-- A `store` consumes its value operand and produces no result.
-
-Integer and floating-point operations may only consume register operands. External values, memory values, and constants must first be loaded into registers with a `load` operation.
-
-## Input Program
-
-The input is a list of numbered operations in dependency order.
-
-```text
-0: a = load A
-1: b = load B
-2: k = load K
-3: x = load X
-4: y = load Y
-5: z = load Z
-6: c = iadd a, b
-7: d = imul c, k
-8: e = fmul x, y
-9: f = fadd e, z
-10: store C, d
-11: store D, f
-```
-
-Operands written in uppercase, such as `A`, `B`, `K`, `X`, `Y`, `Z`, are load/store addresses. They may appear as the address operand of a `load` or `store`, but they may not be passed directly to an integer or floating-point operation.
-
-Operands written by earlier operations are available only after the producing operation's latency has elapsed.
-
-Memory ordering is simplified:
-
-- Loads may be freely reordered with other loads.
-- Stores may not move before operations that compute their address or value.
-- Stores may be freely reordered with each other unless the interviewer enables the optional aliasing rule.
-
-Optional aliasing rule for a harder version:
-
-- Preserve the original order of all memory operations whose addresses are not statically different.
-
-## Output Schedule
-
-The candidate returns a list of VLIW instructions.
-
-```text
-cycle 0: load:3 | store:- | int0:- | int1:- | fp:-
-cycle 1: load:4 | store:- | int0:- | int1:- | fp:-
-cycle 2: load:5 | store:- | int0:- | int1:- | fp:-
-cycle 3: load:0 | store:- | int0:- | int1:- | fp:-
-cycle 4: load:1 | store:- | int0:- | int1:- | fp:8
-cycle 5: load:2 | store:- | int0:- | int1:- | fp:-
-cycle 6: load:- | store:- | int0:- | int1:- | fp:-
-cycle 7: load:- | store:- | int0:6 | int1:- | fp:-
-cycle 8: load:- | store:- | int0:7 | int1:- | fp:9
-cycle 9: load:- | store:- | int0:- | int1:- | fp:-
-cycle 10: load:- | store:10 | int0:- | int1:- | fp:-
-cycle 11: load:- | store:11 | int0:- | int1:- | fp:-
-```
-
-Empty slots are written as `-`.
-
-## Validity Rules
-
-A schedule is valid if:
-
-1. Every input operation appears exactly once.
-2. Every operation appears in a compatible slot.
-3. No slot contains more than one operation in the same cycle.
-4. Every operation is issued only after all of its operands are available.
-5. Every source operand of an integer or floating-point operation is a register written by an earlier operation.
-6. Stores obey the configured memory-ordering rule.
-
-The score is the number of cycles in the schedule. Lower is better.
-
-For interviews, accept any valid schedule, then ask the candidate how they would improve it. For take-home grading, compare against a known optimal or near-optimal answer.
-
-## Worked Example
-
-Input:
-
-```text
-0: a = load A
-1: b = load B
-2: c = load C
-3: x = load X
-4: y = load Y
-5: z = load Z
-6: n = load N
-7: d = iadd a, b
-8: e = imul d, c
-9: f = fmul x, y
-10: g = fadd f, z
-11: h = iadd e, n
-12: store OUT1, h
-13: store OUT2, g
-```
-
-One good schedule:
-
-```text
-cycle 0: load:3 | store:- | int0:- | int1:- | fp:-
-cycle 1: load:4 | store:- | int0:- | int1:- | fp:-
-cycle 2: load:5 | store:- | int0:- | int1:- | fp:-
-cycle 3: load:0 | store:- | int0:- | int1:- | fp:-
-cycle 4: load:1 | store:- | int0:- | int1:- | fp:9
-cycle 5: load:2 | store:- | int0:- | int1:- | fp:-
-cycle 6: load:6 | store:- | int0:- | int1:- | fp:-
-cycle 7: load:- | store:- | int0:7 | int1:- | fp:-
-cycle 8: load:- | store:- | int0:8 | int1:- | fp:10
-cycle 9: load:- | store:- | int0:- | int1:- | fp:-
-cycle 10: load:- | store:- | int0:11 | int1:- | fp:-
-cycle 11: load:- | store:12 | int0:- | int1:- | fp:-
-cycle 12: load:- | store:13 | int0:- | int1:- | fp:-
-```
-
-This schedule takes 13 cycles.
-
-Key observations:
-
-- The `x`, `y`, and `z` values are loaded first so the independent floating-point chain can start early.
-- All operands to `iadd`, `imul`, `fadd`, and `fmul` are registers produced by earlier loads or arithmetic operations.
-- Loads are issued in consecutive cycles because there is only one load slot.
-- The two integer slots do not help much here because the integer dependency chain is serial.
-- Stores can be packed as soon as their value operands are ready, but only one store may issue per cycle.
-
-## Interview Variants
-
-Easy version:
-
-- The candidate only needs to validate and improve schedules manually.
-- Programs contain 10-20 operations.
-- All memory addresses are known distinct.
-
-Medium version:
-
-- The candidate writes a scheduler.
-- A greedy list scheduler is enough for solid performance.
-- Programs contain 50-200 operations.
-
-Hard version:
-
-- Add memory alias constraints.
-- Add multiple basic blocks.
-- Ask for either optimal scheduling with branch-and-bound for small inputs or near-optimal scheduling for large inputs.
-
-## Expected Candidate Approach
-
-A reasonable implementation usually has these pieces:
-
-1. Parse operations and build a dependency graph.
-2. Track each operation's unscheduled predecessor count.
-3. Maintain a ready set of operations whose dependencies are satisfied.
-4. For each cycle, fill slots using a priority heuristic.
-5. Advance time, mark completed results, and add newly ready operations.
-
-Useful priority heuristics:
-
-- Prefer operations on the critical path.
-- Prefer longer-latency operations when otherwise tied.
-- Prefer scarce slots when many ready operations compete for them.
-- Schedule stores late if they are not on the critical path.
-
-The minimal correct solution can be a straightforward greedy scheduler. The best candidates will notice that "ready" is not the same as "all predecessors scheduled"; an operand is usable only after the producer's latency has elapsed.
-
-## Follow-Up Questions
-
-- How would you compute a critical-path priority?
-- How would you prove a schedule is valid?
-- When can a greedy scheduler be suboptimal?
-- How would you find the optimal answer for programs under 20 operations?
-- What changes if loads and stores may alias?
-- What changes if the machine supports forwarding from an operation in the same cycle?
-
-## Checker
-
-This folder includes a small Python checker:
-
-```sh
-python3 vliw.py examples/problem1.vliw examples/answer1.sched --max-cycles 13
-```
-
-Expected output:
-
-```text
-OK: valid schedule, cycles=13
-```
-
-A bad schedule fails with a concrete reason:
-
-```sh
-python3 vliw.py examples/problem1.vliw examples/bad_too_early.sched
-```
-
-Expected output:
-
-```text
-INVALID: operation 7 uses register 'b' in cycle 6, but operation 1 produces it in cycle 7
-```
-
-Run the checker tests with:
+Run the public suite and benchmark with:
 
 ```sh
 python3 -m unittest -v
+python3 score.py
 ```
+
+Compile one program to a JSON schedule with:
+
+```sh
+python3 compiler.py programs/03_vector_axpy.json > axpy.schedule.json
+python3 machine.py programs/03_vector_axpy.json axpy.schedule.json
+```
+
+Eight public programs are in `programs/`. Submission grading uses another
+eight programs that are not included in the candidate repository. Hidden
+programs use only the documented operations and limits below. Solutions that
+special-case public filenames, operation IDs, or constants will not generalize.
+
+## Machine model
+
+The machine has a 256-word scratchpad. Each word is an unsigned 32-bit integer.
+There is no implicit register file or cache. Every SSA result must be assigned
+scratch space before it can be consumed.
+
+SIMD vectors contain eight words and occupy eight consecutive scratch words.
+Vector allocations must begin at an address divisible by eight. Scalar values
+occupy one word. Values may share all or part of their scratch ranges when their
+live intervals do not overlap. All supplied programs fit without spilling even
+with the starter's allocation; reducing scratch use is part of the challenge.
+
+A value's live interval starts when its result writes scratch, at issue cycle
+plus latency, and ends at its last consumer's issue cycle, inclusive. An unused
+result still occupies scratch for its write cycle. Writes happen before reads in
+a cycle, so a new result must write strictly after an old value's final read to
+reuse its words. Two writes to overlapping words in the same cycle are invalid.
+An operation may read its input and later write its output to the same address.
+Account for in-flight results when choosing addresses and schedules.
+
+Scratch footprint is the highest allocated end address, including alignment
+holes. For example, a vector at address 8 uses a footprint of at least 16 words.
+There are no moves or spills to insert: every original operation must issue
+exactly once, and the input program must not be changed.
+
+Each cycle issues one VLIW bundle with these engine limits:
+
+| Engine | Slots per cycle |
+| --- | ---: |
+| `load` | 2 |
+| `scalar` | 2 |
+| `vector` | 2 |
+| `store` | 1 |
+| `flow` | 1 |
+
+An operation issued in cycle `c` may be consumed in cycle `c + latency`.
+Results are not forwarded within the same bundle. Independent operations can
+issue in any order if dependencies, engine capacity, and memory ordering are
+preserved.
+
+## Instruction set
+
+| Operation | Engine | Latency | Result | Arguments |
+| --- | --- | ---: | --- | --- |
+| `const` | load | 1 | scalar | immediate `value` field |
+| `load` | load | 3 | scalar | memory `buffer` and `offset` |
+| `vload` | load | 4 | vector | eight words at `buffer` and `offset` |
+| `store` | store | 1 | none | scalar value, memory `buffer` and `offset` |
+| `vstore` | store | 1 | none | vector value, memory `buffer` and `offset` |
+| `add`, `sub`, `xor`, `and`, `or`, `shl`, `shr`, `eq`, `lt` | scalar | 1 | scalar | two scalars |
+| `mul` | scalar | 2 | scalar | two scalars |
+| `vadd`, `vsub`, `vxor`, `vand`, `vor`, `vshl`, `vshr` | vector | 1 | vector | two vectors, lane-wise |
+| `vmul` | vector | 3 | vector | two vectors, lane-wise |
+| `splat` | vector | 1 | vector | one scalar copied to every lane |
+| `select` | flow | 1 | scalar | condition, true value, false value |
+| `vselect` | flow | 2 | vector | vector condition, true vector, false vector |
+
+Arithmetic wraps modulo `2**32`. Shift counts use their low five bits. `eq`
+and `lt` produce `0` or `1`; comparisons are unsigned. `select` chooses its
+second argument when the condition is nonzero.
+
+Programs use the following JSON shape:
+
+```json
+{
+  "name": "example",
+  "buffers": {"x": 8, "out": 8},
+  "operations": [
+    {"id": 0, "op": "vload", "dest": "vx", "buffer": "x", "offset": 0},
+    {"id": 1, "op": "vstore", "args": ["vx"], "buffer": "out", "offset": 0}
+  ],
+  "cases": [
+    {"x": [1, 2, 3, 4, 5, 6, 7, 8], "out": [0, 0, 0, 0, 0, 0, 0, 0]}
+  ]
+}
+```
+
+Operations are listed in SSA dependency order. IDs are consecutive starting at
+zero. Every argument names a result defined by an earlier operation.
+
+## Memory ordering
+
+Memory ranges are known statically. Loads may reorder freely unless they overlap
+an earlier store. A store must remain after every earlier overlapping load or
+store, and every later overlapping load or store must remain after it. Two
+ordered memory operations must issue in different cycles. Operations accessing
+provably disjoint ranges may reorder.
+
+## Evaluation
+
+Every public and hidden case is interpreted directly from the input IR to
+produce its reference memory image. The frozen grader then validates scratch
+allocations, dependencies, engine limits, latencies, memory ordering, and final
+memory. Modifying or bypassing the public simulator cannot change hidden results.
+
+Correctness on all programs is the first requirement. Among correct compilers,
+we report geometric-mean cycle speedup and geometric-mean scratch reduction
+relative to the frozen serial baseline across all sixteen programs. For each
+program these ratios are `baseline_cycles / cycles` and
+`baseline_scratch_words / scratch_words`. The combined score is
+`sqrt(cycle_speedup_geomean * scratch_reduction_geomean)`, giving equal weight
+to both objectives. The starter scores 1.000x on each metric. Public scoring
+uses the same formula on the eight visible programs; the private grader reports
+the final combined result on all sixteen. We also review compiler structure, clarity, and the
+tradeoffs in your scheduling heuristic.
+
+Useful directions include critical-path priorities, latency-aware ready queues,
+scarce-engine prioritization, and filling bundles without blocking newly ready
+work. Optimal scheduling is not expected.
+
+
+## Logistics and submission
+
+Use Python 3.10 or later; no third-party packages are required. Run commands
+from the repository root. Spend up to four hours, including reading and testing;
+submit what you have at that point and note unfinished work. We value a clear,
+correct incremental improvement over an unfinished complicated design.
+
+Documentation, internet research, and AI coding tools are allowed. Disclose the
+tools used and how you checked their output. You should be able to explain and
+modify your submission in a follow-up discussion. Do not share the exercise or
+solution publicly or collaborate with another person.
+
+Return `compiler.py` and a short `SUBMISSION.md` to your interviewer using the
+channel that supplied the exercise. Include time spent, your scheduling and
+allocation approach, measured public scores, tradeoffs, unfinished work, and
+any tool assistance. You may include additional tests separately; do not alter
+the supplied tests or machine. The compiler must emit only schedule JSON on
+stdout when invoked through the documented CLI; send diagnostics to stderr.
+The grader allows 20 seconds per program. Hidden inputs follow the same machine
+contract, and grading uses trusted copies of all public and hidden programs.

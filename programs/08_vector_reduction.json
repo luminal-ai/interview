@@ -1,0 +1,31 @@
+{
+  "name": "vector_reduction",
+  "buffers": {"data": 64, "out": 8},
+  "operations": [
+    {"id": 0, "op": "vload", "dest": "v0", "buffer": "data", "offset": 0},
+    {"id": 1, "op": "vload", "dest": "v1", "buffer": "data", "offset": 8},
+    {"id": 2, "op": "vload", "dest": "v2", "buffer": "data", "offset": 16},
+    {"id": 3, "op": "vload", "dest": "v3", "buffer": "data", "offset": 24},
+    {"id": 4, "op": "vload", "dest": "v4", "buffer": "data", "offset": 32},
+    {"id": 5, "op": "vload", "dest": "v5", "buffer": "data", "offset": 40},
+    {"id": 6, "op": "vload", "dest": "v6", "buffer": "data", "offset": 48},
+    {"id": 7, "op": "vload", "dest": "v7", "buffer": "data", "offset": 56},
+    {"id": 8, "op": "vadd", "dest": "r0", "args": ["v0", "v1"]},
+    {"id": 9, "op": "vadd", "dest": "r1", "args": ["v2", "v3"]},
+    {"id": 10, "op": "vadd", "dest": "r2", "args": ["v4", "v5"]},
+    {"id": 11, "op": "vadd", "dest": "r3", "args": ["v6", "v7"]},
+    {"id": 12, "op": "vadd", "dest": "r4", "args": ["r0", "r1"]},
+    {"id": 13, "op": "vadd", "dest": "r5", "args": ["r2", "r3"]},
+    {"id": 14, "op": "vadd", "dest": "sum", "args": ["r4", "r5"]},
+    {"id": 15, "op": "const", "dest": "key", "value": 2779096485},
+    {"id": 16, "op": "splat", "dest": "vkey", "args": ["key"]},
+    {"id": 17, "op": "vxor", "dest": "result", "args": ["sum", "vkey"]},
+    {"id": 18, "op": "vstore", "args": ["result"], "buffer": "out", "offset": 0}
+  ],
+  "cases": [
+    {
+      "data": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+      "out": [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}

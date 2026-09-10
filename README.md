@@ -175,9 +175,9 @@ tools used and how you checked their output. You should be able to explain and
 modify your submission in a follow-up discussion. Do not share the exercise or
 solution publicly or collaborate with another person.
 
-Return `compiler.py` and a short `SUBMISSION.md` to your interviewer using the
-channel that supplied the exercise. Include time spent, your scheduling and
-allocation approach, measured public scores, tradeoffs, unfinished work, and
+Email `compiler.py` and a short `SUBMISSION.md` to
+[submissions@luminal.com](mailto:submissions@luminal.com). Include time spent,
+your scheduling and allocation approach, measured public scores, tradeoffs, unfinished work, and
 any tool assistance. You may include additional tests separately; do not alter
 the supplied tests or machine. The compiler must emit only schedule JSON on
 stdout when invoked through the documented CLI; send diagnostics to stderr.

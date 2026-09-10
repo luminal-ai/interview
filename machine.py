@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Frozen machine definition, validator, interpreter, and simulator."""
+"""Luminal Compiler Take Home — compiler engineering machine and validator."""
 
 from __future__ import annotations
 

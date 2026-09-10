@@ -1,4 +1,8 @@
-# VLIW Backend Compiler Take-Home
+# Luminal Compiler Take Home
+
+This take-home exercise is for candidates joining the compiler engineering team
+at Luminal. It evaluates instruction scheduling, scratch allocation, correctness,
+and engineering judgment when building a compiler backend.
 
 Build a general backend compiler for a small, deterministic VLIW machine. The
 input is a typed, straight-line SSA program. Your compiler must assign every

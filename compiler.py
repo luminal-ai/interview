@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Candidate-owned compiler implementation.
+"""Luminal Compiler Take Home — compiler engineering candidate implementation.
 
 The starter is intentionally conservative: it allocates every SSA value once
 and emits at most one operation per bundle. Improve compile_program without

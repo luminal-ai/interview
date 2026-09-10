@@ -1,3 +1,5 @@
+"""Luminal Compiler Take Home — Machine contract tests for compiler engineering."""
+
 from __future__ import annotations
 
 import unittest

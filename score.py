@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run and score the eight candidate-visible programs."""
+"""Luminal Compiler Take Home — compiler engineering public benchmark."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ PROGRAM_DIR = Path(__file__).parent / "programs"
 
 
 def main() -> int:
+    print("Luminal Compiler Take Home — compiler engineering public benchmark")
     speedups = []
     reductions = []
     print(f"{'program':30} {'cycles':>8} {'baseline':>9} {'speedup':>9} {'scratch':>8} {'reduction':>10}")
